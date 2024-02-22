@@ -51,6 +51,7 @@ export class TestComponent {
           this.dataArr.push(newPeriod);
         }
         console.log(csvData);
+        this.checkForEmplyeesPair();
       };
       fileReader.readAsText(file);
     }
