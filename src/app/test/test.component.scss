@@ -3,7 +3,17 @@
 }
 
 .btn {
-  margin: 10px;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  background-color: #a5119c;
+  border-radius: 6px;
+  margin: 12px;
+  &:hover {
+    
+  background-color: #a5119c;
+  }
 }
 
 .loader {
