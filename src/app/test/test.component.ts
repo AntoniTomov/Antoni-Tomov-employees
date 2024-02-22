@@ -1,29 +1,25 @@
-import {
-  Component,
-  Directive,
-  Input,
-  ViewChild,
-  ViewChildren,
-} from '@angular/core';
+import { Component } from '@angular/core';
 import { Period } from '../models/period';
-
-@Directive({ selector: 'pane' })
-export class Pane {
-  @Input() id!: string;
-}
+import { TransformedPair } from '../models/transformed-pair';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-test',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './test.component.html',
   styleUrl: './test.component.scss',
 })
 export class TestComponent {
+  employeesPairs: TransformedPair[] = [];
   dataArr: Period[] = [];
+  loading = false;
   constructor() {}
 
   onFileUpload(event: Event) {
+    this.employeesPairs = [];
+    this.dataArr = [];
+    this.loading = true;
     const target = event.target as HTMLInputElement;
     if (target && target.files?.length) {
       const file = target.files[0];
@@ -32,9 +28,6 @@ export class TestComponent {
         const fileContent = fileReader.result as string;
         const rows = fileContent.trim().replaceAll('\r', '').split('\n');
         const csvData: any[] = [];
-        console.log('fileContent', fileContent);
-        console.log('type: ', typeof fileContent);
-        console.log('rows', rows);
 
         for (let i = 0; i < rows.length; i++) {
           const columns = rows[i]
@@ -43,33 +36,77 @@ export class TestComponent {
             .map((el) => el.trim());
           csvData.push(columns);
           const newPeriod = {
-            empID: columns[0],
-            projectID: columns[1],
+            empId: columns[0],
+            projectId: columns[1],
             dateFrom: new Date(columns[2]).getTime(),
-            dateTo: new Date(columns[3])?.getTime(),
+            dateTo: new Date(columns[3])?.getTime() || new Date().getTime(),
           };
           this.dataArr.push(newPeriod);
         }
-        console.log(csvData);
-        this.checkForEmplyeesPair();
+        this.employeesPairs = this.getEmplyeesPairs();
+        this.loading = false;
       };
       fileReader.readAsText(file);
     }
   }
 
-  checkForEmplyeesPair() {
-    const employeesArr = [];
+  getEmplyeesPairs() {
+    const pairsArr = [];
     for (let i = 0; i <= this.dataArr.length - 2; i++) {
       for (let j = i + 1; j <= this.dataArr.length - 1; j++) {
-        const currentPeriod = this.dataArr[j];
         if (
-          this.dataArr[i].projectID === this.dataArr[j].projectID &&
-          this.dataArr[i].empID !== this.dataArr[j].empID
+          this.dataArr[i].projectId === this.dataArr[j].projectId &&
+          this.dataArr[i].empId !== this.dataArr[j].empId &&
+          this.dataArr[i].dateFrom < this.dataArr[j].dateTo &&
+          this.dataArr[i].dateTo > this.dataArr[j].dateFrom
         ) {
-          employeesArr.push([this.dataArr[i], this.dataArr[j]]);
+          const transformedPair = this.transformPairInfo(
+            this.dataArr[i],
+            this.dataArr[j]
+          );
+          let exisitngPair = pairsArr.find(
+            (pair) =>
+              pair.empOneId === transformedPair.empOneId &&
+              pair.empTwoId === transformedPair.empTwoId &&
+              pair.projectId === transformedPair.projectId
+          );
+          exisitngPair
+            ? (exisitngPair.duration += transformedPair.duration)
+            : pairsArr.push(transformedPair);
         }
       }
     }
-    console.log('employeesArr: ', employeesArr);
+    return pairsArr;
+  }
+
+  transformPairInfo(pairOne: Period, pairTwo: Period) {
+    let transformedPair = {
+      empOneId: '',
+      empTwoId: '',
+      projectId: pairOne.projectId,
+      duration: 0,
+    };
+    if (pairOne.dateFrom >= pairTwo.dateFrom) {
+      transformedPair.empOneId = pairTwo.empId;
+      transformedPair.empTwoId = pairOne.empId;
+      if (pairOne.dateTo >= pairTwo.dateTo) {
+        transformedPair.duration =
+          (pairTwo.dateTo - pairOne.dateFrom) / 1000 / 60 / 60 / 24;
+      } else {
+        transformedPair.duration =
+          (pairOne.dateTo - pairOne.dateFrom) / 1000 / 60 / 60 / 24;
+      }
+    } else {
+      transformedPair.empOneId = pairOne.empId;
+      transformedPair.empTwoId = pairTwo.empId;
+      if (pairOne.dateTo >= pairTwo.dateTo) {
+        transformedPair.duration =
+          (pairTwo.dateTo - pairTwo.dateFrom) / 1000 / 60 / 60 / 24;
+      } else {
+        transformedPair.duration =
+          (pairOne.dateTo - pairTwo.dateFrom) / 1000 / 60 / 60 / 24;
+      }
+    }
+    return transformedPair;
   }
 }

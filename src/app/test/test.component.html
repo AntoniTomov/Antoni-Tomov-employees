@@ -1,7 +1,32 @@
-<button type="button" (click)="filePicker.click()">Upload CSV file</button>
-<input
-  class="file-picker"
-  type="file"
-  #filePicker
-  (change)="onFileUpload($event)"
-/>
+<ng-container *ngIf="!loading; else spinner">
+  <button type="button" (click)="filePicker.click()" class="btn">
+    Upload CSV file
+  </button>
+  <input
+    class="file-picker"
+    type="file"
+    #filePicker
+    (change)="loading = true; onFileUpload($event)"
+  />
+</ng-container>
+<ng-template #spinner>
+  <div class="loader"></div>
+</ng-template>
+<ng-container *ngIf="employeesPairs">
+  <table id="ex1-grid" role="grid" aria-labelledby="grid1Label" class="data">
+    <tbody>
+      <tr>
+        <th>Employee ID #1</th>
+        <th>Employee ID #2</th>
+        <th>Project ID</th>
+        <th>Days worked</th>
+      </tr>
+      <tr *ngFor="let pair of employeesPairs">
+        <td>{{ pair.empOneId }}</td>
+        <td>{{ pair.empTwoId }}</td>
+        <td>{{ pair.projectId }}</td>
+        <td>{{ pair.duration }}</td>
+      </tr>
+    </tbody>
+  </table>
+</ng-container>

@@ -1,6 +1,6 @@
 export interface Period {
-  empID: string;
-  projectID: string;
+  empId: string;
+  projectId: string;
   dateFrom: number;
   dateTo: number;
 }
