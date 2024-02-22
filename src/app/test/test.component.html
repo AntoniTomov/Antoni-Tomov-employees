@@ -1,0 +1,7 @@
+<button type="button" (click)="filePicker.click()">Upload CSV file</button>
+<input
+  class="file-picker"
+  type="file"
+  #filePicker
+  (change)="onFileUpload($event)"
+/>
